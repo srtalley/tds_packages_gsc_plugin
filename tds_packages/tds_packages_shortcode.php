@@ -1,28 +1,19 @@
-<?php
+<?php 
+
 class TDS_Packages_Shortcode {
 ////////////////////////////////////////////////////
 // PACKAGES - TOURS AND ACTIVITIES SHORTCODE
 ////////////////////////////////////////////////////
 
-
-
   public function __construct() {
 
     add_shortcode( 'show-packages', array($this, 'add_tds_packages_shortcode') );
+//     add_shortcode( 'pkg-gallery-link', array($this, 'add_tds_pkg_gallery_link_shortcode') );
+//     add_action( 'wp_ajax_nopriv_tds_load_slider_images', array($this, 'tds_load_slider_images') );
+//     add_action( 'wp_ajax_tds_load_slider_images',  array($this, 'tds_load_slider_images') );
   }
-  public function wl ( $log )  {
-        if ( true === WP_DEBUG ) {
-            if ( is_array( $log ) || is_object( $log ) ) {
-                error_log( print_r( $log, true ) );
-            } else {
-                error_log( $log );
-            }
-        }
-    }
-
 
   public function add_tds_packages_shortcode($tdsAttributes =[], $tdsContent = null, $tdsTag = '') {
-
 
     //make the array keys and attributes lowercase
     $tdsAttributes = array_change_key_case((array)$tdsAttributes, CASE_LOWER);
@@ -33,6 +24,9 @@ class TDS_Packages_Shortcode {
       'duration'       => 'all',
       'location'       => 'all',
       'type'           => 'all',
+      'style'          => 'side',
+      'desc'           => 'yes',
+      'cols'           => 'two',
     ], $tdsAttributes, $tdsTag);
 
     $tds_meta_query_combined = array();
@@ -158,11 +152,10 @@ class TDS_Packages_Shortcode {
         $tds_post_id = $tds_packages_query_item['id'];
 
         //Package title
-        $tds_package_title = get_the_title($tds_post_id);
+        $tds_package_title = $tds_packages_query_item['title'];
 
         //Package price
         $tds_package_price = $tds_packages_query_item['price'];
-        //get_post_meta($tds_post_id, 'tds_package_price', true);
 
         if($tds_package_price){
           $tds_package_price = number_format($tds_package_price);
@@ -176,15 +169,16 @@ class TDS_Packages_Shortcode {
         //Package description
         $tds_package_description = get_post_meta($tds_post_id, 'tds_package_description', true);
 
-
-        //Get the saved link
-        $tds_package_url = get_post_meta($tds_post_id, 'tds_package_page_url', true);
-
-
         // //Check if we will link to a lightbox or new window
         $tds_link_data_lightbox = '';
         $tds_package_link_type =  get_post_meta($tds_post_id, 'tds_package_link_type', true);
         $tds_package_url_target = '';
+
+        //$tds_package_url_target = '_self';
+        //Get the saved link
+        $tds_package_url = get_post_meta($tds_post_id, 'tds_package_page_url', true);
+        $tds_package_url_class = '';
+        $tds_link_data = '';
         if($tds_package_link_type == 'blank') {
           // $tds_package_pdf_itinerary = get_post_meta($tds_post_id, 'tds_package_pdf_itinerary', true);
           // $tds_package_url = $tds_package_pdf_itinerary['url'];
@@ -203,11 +197,8 @@ class TDS_Packages_Shortcode {
           }
         }//end if($tds_package_link_type[0] == 'pdf')
 
-
-
         //Get the link text, if any
         $tds_package_link_text = get_post_meta($tds_post_id, 'tds_package_page_link_text', true);
-
 
         //GET THE DESTINATIONS
         $tds_destination_names = array();
@@ -217,7 +208,6 @@ class TDS_Packages_Shortcode {
         endforeach; endif;
         $tds_destinations = implode(', ', $tds_destination_names);
 
-
         //GET THE DURATIONS
         $tds_duration_names = array();
         $tds_packages_duration = get_the_terms($tds_post_id, 'tds-packages-duration');
@@ -225,7 +215,6 @@ class TDS_Packages_Shortcode {
           $tds_duration_names[] = $tds_duration->name;
         endforeach; endif;
         $tds_durations = implode(', ', $tds_duration_names);
-
 
         //GET THE TYPES
         $tds_type_names = array();
@@ -235,7 +224,6 @@ class TDS_Packages_Shortcode {
         endforeach; endif;
         $tds_types = implode(', ', $tds_type_names);
 
-
         //GET THE LOCATIONS
         $tds_location_names = array();
         $tds_packages_location = get_the_terms($tds_post_id, 'tds-packages-location');
@@ -244,64 +232,80 @@ class TDS_Packages_Shortcode {
         endforeach; endif;
         $tds_locations = implode(', ', $tds_location_names);
 
-
         //GET THE TYPE OF ITEM - TOUR, ACTIVITY or LOCATION
         //Check what kind of post this is
-        $tds_package_post_type =  get_post_meta($tds_post_id, 'tds_package_post_type', true);
+        $tds_package_post_type = get_post_meta($tds_post_id, 'tds_package_post_type', true);
 
-        //Set the header color
-        $tds_package_color;
-        //BUILD THE HEADER LINE DEPENDING UPON IF THIS IS A TOUR OR ACTIVITY
-        if($tds_package_post_type == 'Activity') {
-          $tds_header_line = $tds_package_title;
-          $tds_sub_header_line = '';
-          $tds_click_to_view_text = 'Read More About ' . $tds_package_title;
+         //Set the header color
+        $tds_package_color= '';
+        //Set the header title
+        $tds_header_line = $tds_package_title;
+        //Initialize the subheader line
+        $tds_sub_header_line = '';
+        //BUILD THE HEADER LINE DEPENDING UPON THE STYLE
+        if($tdsCustomAttributes['style'] == 'top') {
+            $tds_click_to_view_text = $tds_package_title;
+        } else if ($tdsCustomAttributes['style'] == 'side') {
+            $tds_click_to_view_text = 'View ' . $tds_package_title;
+        }
+
+        // COLORS
+         //  IS A TOUR OR ACTIVITY
+        $tds_meta = '';
+        if($tds_package_post_type == 'Destination') {
+          $tds_package_color = get_option('tds_packages_destination_color_option');
+
+        } elseif($tds_package_post_type == 'Activity') {
           $tds_package_color = get_option('tds_packages_activity_color_option');
-
-        } elseif($tds_package_post_type == 'Tour') {
+          $tds_click_to_view_text = 'Read More About ' . $tds_package_title;        } elseif($tds_package_post_type == 'Tour') {
           $tds_header_line = $tds_destinations . ': ' . $tds_durations .' from $' . $tds_package_price;
           $tds_sub_header_line = '<h5>' . $tds_package_title . '</h5>';
           $tds_click_to_view_text = 'View Detailed Itinerary';
           $tds_package_color = get_option('tds_packages_tour_color_option');
 
         } elseif($tds_package_post_type == 'Location') {
-          $tds_header_line = $tds_package_title;
-          $tds_sub_header_line = '';
           $tds_click_to_view_text = 'Read More About ' . $tds_locations;
           $tds_package_color = get_option('tds_packages_location_color_option');
 
         } elseif($tds_package_post_type == 'Other') {
-          $tds_header_line = $tds_package_title;
-          $tds_sub_header_line = '';
           $tds_click_to_view_text = 'Read More';
           $tds_package_color = get_option('tds_packages_other_color_option');
+          //$tds_meta .= '<span class="tds-meta-name">Location: ' . $tds_locations . '</span>';
         }
 
         if(!empty($tds_package_link_text) || $tds_package_link_text != '') {
-          $tds_click_to_view_text = $tds_package_link_text;
+          $tds_click_to_view_text =  $tds_package_link_text ;
         }
         // get_post_taxonomies($tds_post_id);//get_the_terms( $tds_post_id,  'tds-packages-duration');
         //Outer item HTML
-        $tdsHTML .= '<div class="tds-package-item">';
+        $tdsHTML .= '<div class="tds-package-item display-' . $tdsCustomAttributes['style'] . ' columns-' . $tdsCustomAttributes['cols'] .' desc-' . $tdsCustomAttributes['desc'] . '">';
 
-          $tdsHTML .= '<div class="tds-item-left" style="background-image: url(' . $tds_package_thumbnail. ')">';
+          $tdsHTML .= '<div class="tds-item-img">';
+
+          $tdsHTML .= '<a class="clickable-link ' . $tds_package_url_class . '" href="' . $tds_package_url . '" target="' . $tds_package_url_target . '" ' . $tds_link_data . '></a>';
+
+            $tdsHTML .= '<div class="tds-item-img-bg" style="background-image: url(' . $tds_package_thumbnail. ')">';
+
+              $tdsHTML .= get_the_post_thumbnail($tds_post_id, 'large');
+
+              $tdsHTML .= '</div> <!-- end tds-item-img-bg-->';
             $tdsHTML .= '<div class="tds-click-overlay">';
-              $tdsHTML .= '<a href="' . $tds_package_url . '" target="' . $tds_package_url_target . '">' . $tds_click_to_view_text . '</a>';
+              $tdsHTML .= '<a class="' . $tds_package_url_class . '" href="' . $tds_package_url . '" target="' . $tds_package_url_target . '" ' . $tds_link_data . '>' . $tds_click_to_view_text . '</a>';
             $tdsHTML .= '</div><!-- end tds-click-overlay-->';
-          $tdsHTML .= '</div> <!-- end tds-item-left-->';
 
+          $tdsHTML .= '</div> <!-- end tds-item-img-->';
 
-          $tdsHTML .= '<div class="tds-item-right">';
-            $tdsHTML .= '<div class="tds-combined-title" style="background-color: ' . $tds_package_color . ';"><h3>';
-            $tdsHTML .= '<a href="' . $tds_package_url . '" target="' . $tds_package_url_target . '">' .         $tds_header_line . '</a></h3></div>';
-
-            //$tdsHTML .= '<div class="tds-click-overlay">';
-            //  $tdsHTML .= '<a href="' . $tds_package_url . '" target="' . $tds_package_url_target . '">' . $tds_click_to_view_text . '</a>';
-            //$tdsHTML .= '</div><!-- end tds-click-overlay-->';
-              $tdsHTML .= '<div class="tds-description">' . $tds_sub_header_line;
-              $tdsHTML .= '<p>' . $tds_package_description . '</p></div>';
-
-          $tdsHTML .= '</div> <!-- end tds-item-right-->';
+          if($tdsCustomAttributes['desc'] == 'yes') {
+            $tdsHTML .= '<div class="tds-item-desc">';
+              $tdsHTML .= '<div class="tds-combined-title" style="background-color: ' . $tds_package_color . ';"><h3>';
+              $tdsHTML .= '<a class="' . $tds_package_url_class . '" href="' . $tds_package_url . '" target="' . $tds_package_url_target . '" ' . $tds_link_data . '>' .         $tds_header_line . '</a></h3></div>';
+                $tdsHTML .= '<div class="tds-description">' . $tds_sub_header_line . '<span>';
+                $tdsHTML .= $tds_package_description . '</span>';
+                if($tds_meta != '') $tdsHTML .= '<div class="tds-meta">' . $tds_meta . '</div>';
+                $tdsHTML .= '</div>';
+  
+            $tdsHTML .= '</div> <!-- end tds-item-desc-->';
+          }
 
         //Close outer item HTML
         $tdsHTML .= '</div> <!-- end tds-package-item -->';

@@ -3,7 +3,8 @@
 Plugin Name: Build Custom Packages for Tours and Activities
 Plugin URI: http://talleyservices.com
 Description: Allows adding custom packages that can be shown on pages using a simple shortcode
-Version: 1.1
+Version: 1.2
+Date: 2020-01-31
 Author: Talley Services
 Author URI: http://talleyservices.com
 License: GPLv2
@@ -125,6 +126,10 @@ class TDS_Packages {
                   'tds_package_activity' => array(
                     'label' => 'Activity',
                     'value' => 'Activity',
+                  ),
+                  'tds_package_destination' => array(
+                    'label' => 'Destination',
+                    'value' => 'Destination',
                   ),
                   'tds_package_location' => array(
                     'label' => 'Location',
@@ -371,6 +376,7 @@ class TDS_Packages {
 
   public function tds_default_settings() {
     if(!get_option('tds_packages_activity_color_option')): add_option( 'tds_packages_activity_color_option', '#2d75b6'); endif;
+    if(!get_option('tds_packages_destination_color_option')): add_option( 'tds_packages_destination_color_option', '#2d75b6'); endif;
     if(!get_option('tds_packages_location_color_option')): add_option( 'tds_packages_location_color_option', '#2d75b6'); endif;
     if(!get_option('tds_packages_other_color_option')): add_option( 'tds_packages_other_color_option', '#2d75b6'); endif;
     if(!get_option('tds_packages_tour_color_option')): add_option( 'tds_packages_tour_color_option', '#2d75b6'); endif;
