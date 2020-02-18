@@ -105,8 +105,8 @@ class TDSPackagesCPT extends DSWPCPTAPI\CPTBuilder {
           'type' => 'radio',
           'class' => 'self blank lightbox_iframe toggle_child_link_type toggle_parent_link_url_type',
           'options' => array(
+            'custom_url' => 'Custom URL',
               'page_url' => 'WordPress Page URL',
-              'custom_url' => 'Custom URL'
           ),
         ),
         array(
