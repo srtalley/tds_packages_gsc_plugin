@@ -158,7 +158,8 @@ class TDS_Packages_Shortcode {
         $tds_package_price = $tds_packages_query_item['price'];
 
         if($tds_package_price){
-          $tds_package_price = number_format($tds_package_price);
+          // strip 
+          $tds_package_price = number_format(floatval(preg_replace("/[^0-9.]/", '', $tds_package_price)));
         } else {
           $tds_package_price = 0;
         }
