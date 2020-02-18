@@ -8,9 +8,9 @@ class TDS_Packages_Shortcode {
   public function __construct() {
 
     add_shortcode( 'show-packages', array($this, 'add_tds_packages_shortcode') );
-//     add_shortcode( 'pkg-gallery-link', array($this, 'add_tds_pkg_gallery_link_shortcode') );
-//     add_action( 'wp_ajax_nopriv_tds_load_slider_images', array($this, 'tds_load_slider_images') );
-//     add_action( 'wp_ajax_tds_load_slider_images',  array($this, 'tds_load_slider_images') );
+    add_shortcode( 'pkg-gallery-link', array($this, 'add_tds_pkg_gallery_link_shortcode') );
+    add_action( 'wp_ajax_nopriv_tds_load_slider_images', array($this, 'tds_load_slider_images') );
+    add_action( 'wp_ajax_tds_load_slider_images',  array($this, 'tds_load_slider_images') );
   }
 
   public function add_tds_packages_shortcode($tdsAttributes =[], $tdsContent = null, $tdsTag = '') {
@@ -146,7 +146,7 @@ class TDS_Packages_Shortcode {
     if( $tds_packages_query_items ) {
       $tdsHTML = '';
       //make the enclosing div
-      $tdsHTML .= '<div class="tds-packages">';
+      $tdsHTML .= '<div class="tds-packages columns-' . $tdsCustomAttributes['cols'] . '">';
       foreach($tds_packages_query_items as $tds_packages_query_item) {
 
         $tds_post_id = $tds_packages_query_item['id'];
@@ -163,6 +163,13 @@ class TDS_Packages_Shortcode {
           $tds_package_price = 0;
         }
 
+        // Menu order 
+
+        $tds_packages_menu_order = get_post_meta($tds_post_id, 'tds_package_menu_order', true);
+        if($tds_packages_menu_order == '') {
+          $tds_packages_menu_order = '9999';
+        }
+
         //Package image
         $tds_package_thumbnail = get_the_post_thumbnail_url($tds_post_id, 'full');
 
@@ -170,24 +177,37 @@ class TDS_Packages_Shortcode {
         $tds_package_description = get_post_meta($tds_post_id, 'tds_package_description', true);
 
         // //Check if we will link to a lightbox or new window
-        $tds_link_data_lightbox = '';
         $tds_package_link_type =  get_post_meta($tds_post_id, 'tds_package_link_type', true);
-        $tds_package_url_target = '';
 
-        //$tds_package_url_target = '_self';
+        $tds_package_url_target = '_self';
+
         //Get the saved link
-        $tds_package_url = get_post_meta($tds_post_id, 'tds_package_page_url', true);
+
+        $tds_package_link_url_type = get_post_meta($tds_post_id, 'tds_package_link_url_type', true); 
+
+        // set a default value 
+        $tds_package_url = '';
+
+        if($tds_package_link_url_type == '' || $tds_package_link_url_type == 'custom_url') {
+          //This is the custom link
+          $tds_package_url = get_post_meta($tds_post_id, 'tds_package_page_url', true);
+        } else if ($tds_package_link_url_type == 'page_url') {
+          $tds_package_page_url_post_id = get_post_meta($tds_post_id, 'tds_package_page_post_link', true);
+          $tds_package_url = get_permalink($tds_package_page_url_post_id);
+        }
+
         $tds_package_url_class = '';
         $tds_link_data = '';
         if($tds_package_link_type == 'blank') {
           // $tds_package_pdf_itinerary = get_post_meta($tds_post_id, 'tds_package_pdf_itinerary', true);
           // $tds_package_url = $tds_package_pdf_itinerary['url'];
           $tds_package_url_target = '_blank';
-        } elseif($tds_package_link_type == 'self') {
-          $tds_package_url_target = '_self';
-        } elseif($tds_package_link_type == 'lightbox') {
-          $tds_package_url_target = '_self';
-          $tds_link_data_lightbox = 'data-featherlight="iframe"';
+        } elseif($tds_package_link_type == 'lightbox_iframe') {
+          $tds_package_url_class = 'open-iframe-link';
+        } elseif($tds_package_link_type == 'lightbox_gallery') {
+          $tds_package_url = '#gallery-wrap-' . $tds_post_id;
+          $tds_package_url_class = 'open-popup-link';
+          $tds_link_data = 'data-slidertitle="' . $tds_package_title . '" data-loadslider="' . $tds_post_id . '"';
         } else {
           //check if it's a PDF
           if (substr($tds_package_url,-3)=="pdf") {
@@ -264,9 +284,8 @@ class TDS_Packages_Shortcode {
           $tds_package_color = get_option('tds_packages_tour_color_option');
 
         } elseif($tds_package_post_type == 'Location') {
-          $tds_click_to_view_text = 'Read More About ' . $tds_locations;
           $tds_package_color = get_option('tds_packages_location_color_option');
-
+          $tds_click_to_view_text = 'Read More About ' . $tds_locations;
         } elseif($tds_package_post_type == 'Other') {
           $tds_click_to_view_text = 'Read More';
           $tds_package_color = get_option('tds_packages_other_color_option');
@@ -278,7 +297,7 @@ class TDS_Packages_Shortcode {
         }
         // get_post_taxonomies($tds_post_id);//get_the_terms( $tds_post_id,  'tds-packages-duration');
         //Outer item HTML
-        $tdsHTML .= '<div class="tds-package-item display-' . $tdsCustomAttributes['style'] . ' columns-' . $tdsCustomAttributes['cols'] .' desc-' . $tdsCustomAttributes['desc'] . '">';
+        $tdsHTML .= '<div class="tds-package-item display-' . $tdsCustomAttributes['style'] . ' columns-' . $tdsCustomAttributes['cols'] .' desc-' . $tdsCustomAttributes['desc'] . '" style="order: ' . $tds_packages_menu_order  . ';">';
 
           $tdsHTML .= '<div class="tds-item-img">';
 
@@ -317,10 +336,105 @@ class TDS_Packages_Shortcode {
 
     }//end if( !empty($tds_packages_query_items)
 
-
     return $tdsHTML;
   } //end public function add_tds_packages_shortcode
 
-} // end class 
 
+  public function tds_load_slider_images() {
+
+    if(isset($_POST['gallery_post_id']) && !empty($_POST['gallery_post_id'])){
+        $lightbox_post_id = $_POST['gallery_post_id'];
+        $lightbox_title = $_POST['gallery_title'];
+        
+        $tdsLoadLightboxHTML = '<div class="tds-gallery-wrap" id="gallery-wrap-' . $lightbox_post_id .'">'; 
+        
+            $tdsLoadLightboxHTML.= '<div class="tds-gallery-title"><h1>' . $lightbox_title . '</h1></div>';
+            $tdsLoadLightboxHTMLGallerySlides = '<div id="gallery-' . $lightbox_post_id .'" class="flexslider flexslider-slides" style="display: block;"><ul class="slides">';
+
+            $tdsLoadLightboxHTMLGalleryPager = '<div id="carousel-' . $lightbox_post_id .'" class="flexslider flexslider-carousel"><ul class="slides">';
+
+            // get the gallery photos
+            $gallery_photo_ids = get_post_meta($lightbox_post_id, 'tds_package_photos', true);
+            // $tdsLoadLightboxHTMLGallerySlides .= '<ul class="slides">';
+
+            $gallery_photo_counter = 0; 
+
+            foreach($gallery_photo_ids as $gallery_photo_id) {
+
+                $gallery_image_full = wp_get_attachment_image_src($gallery_photo_id, 'full')[0];
+
+                $gallery_image_title = get_the_title($gallery_photo_id);
+
+                // retrieve the URL of the full size
+                $gallery_image_thumb_url = wp_get_attachment_image_src($gallery_photo_id, 'medium')[0];
+
+                $tdsLoadLightboxHTMLGallerySlides .= '<li><h3>' . $gallery_image_title . '</h3><div class="flexslider slidebg" style="background-image:url(\'' . $gallery_image_full . '\');"><img src="' . $gallery_image_full . '"></div></li>';
+
+                $tdsLoadLightboxHTMLGalleryPager .= '<li style="background-image:url(\'' . $gallery_image_thumb_url . '\');"><img src="' . $gallery_image_thumb_url . '"></li>';
+
+                ++$gallery_photo_counter;
+            } // end foreach 
+
+            $tdsLoadLightboxHTMLGallerySlides .= '</ul></div>';
+
+            $tdsLoadLightboxHTMLGalleryPager .= '</ul></div>';
+            $tdsLoadLightboxHTML .= $tdsLoadLightboxHTMLGallerySlides;
+            $tdsLoadLightboxHTML .= $tdsLoadLightboxHTMLGalleryPager;
+            $tdsLoadLightboxHTML .= '</div>';
+            $response = array(
+                'html' => $tdsLoadLightboxHTML,
+                'status' => 'success',
+            );
+    } else {
+        $response = array(
+            'html' => '',
+            'status' => 'failure',
+        );
+    } // end if(isset($_POST['gallery_post_id']) && !empty($_POST['gallery_post_id']))
+
+    wp_send_json($response);
+  } // end function tds_load_slider_images
+
+  public function add_tds_pkg_gallery_link_shortcode($tdsAttributes =[], $tdsContent = null) {
+    //make the array keys and attributes lowercase
+    $tdsAttributes = array_change_key_case((array)$tdsAttributes, CASE_LOWER);
+    //override any default attributes with the user defined parameters
+    $tdsCustomAttributes = shortcode_atts([
+      'id'      => null,
+      'label'          => null
+    ], $tdsAttributes, $tdsTag);
+
+
+
+    if($tdsCustomAttributes['id'] != null) {
+
+      // set the label if it was used between shortcodes
+      if($tdsContent != null) {
+        $tdsCustomAttributes['label'] = $tdsContent;
+      } // end if 
+
+      // get the title 
+      $tds_package_title = get_the_title($tdsCustomAttributes['id']);
+
+      if($tdsCustomAttributes['label'] == null) {
+        $tdsCustomAttributes['label'] = $tds_package_title;
+      }
+
+      $tds_link_data = 'data-slidertitle="' . $tds_package_title . '" data-loadslider="' . $tdsCustomAttributes['id'] . '"';
+
+      $tdsGalleryLinkHTML = '<a class="open-popup-link" href="#gallery-wrap-' . $tdsCustomAttributes['id'] . '" ' . $tds_link_data . '>' . $tdsCustomAttributes['label'] . '</a>';
+      return $tdsGalleryLinkHTML;
+    } // end if
+  } // end function add_tds_pkg_gallery_link_shortcode
+
+  public function wl ( $log )  {
+    if ( true === WP_DEBUG ) {
+        if ( is_array( $log ) || is_object( $log ) ) {
+            error_log( print_r( $log, true ) );
+        } else {
+            error_log( $log );
+        }
+    }
+  } // end public function wl 
+} //end class
 $tds_packages_shortcode = new TDS_Packages_Shortcode();
