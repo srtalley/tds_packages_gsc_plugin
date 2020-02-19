@@ -3,7 +3,10 @@
 GSC TDS Packages Plugin
 
 # Revisions
-= v2.0 2020-02-17=
+= v2.0.1 2020-02-19 = 
+* Added destination_exclude, location_exclude, type_exclude and duration_exclude filters to the shortcode.
+
+= v2.0 2020-02-17 =
 * Added the lightbox and lightbox gallery features from the OA version of the plugin.
 * Added the Dusty Sun CPT library along with updates to enable enhanced toggle fields.
 * Moved the CPT functions to a separate file.

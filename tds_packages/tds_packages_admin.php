@@ -74,9 +74,13 @@ class TDSPackagesSettingsPage
 				<ul style="list-style:disc; margin-left: 40px;">
 					<li>class="xyz"</li>
 					<li>destination="xyz"</li>
+					<li>destination_exclude="xyz"</li>
 					<li>duration="xyz"</li>
+					<li>duration_exclude="xyz"</li>
 					<li>location="xyz"</li>
+					<li>location_exclude="xyz"</li>
 					<li>type="xyz"</li>
+					<li>type_exclude="xyz"</li>
 				</ul>
 			</p>
 

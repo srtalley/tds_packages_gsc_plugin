@@ -163,6 +163,20 @@ class TDSPackagesCPT extends DSWPCPTAPI\CPTBuilder {
             'default' => '[pkg-gallery-link id="' . $post_id . '" label="ReplaceWithYourLinkText"]'
         ),
         array(
+          'label' => 'Package Title Prefix:',
+          'desc' => 'Shown when the Tour type is selected. This will be a comma separated list of the destinations if this is left blank.',
+          'id' => 'tds_package_title_prefix',
+          'type' => 'text',
+          'default' => ''
+        ),
+        array(
+          'label' => 'Package Subtitle:',
+          'desc' => 'Appears above the description. If left blank it will use the title of this package.',
+          'id' => 'tds_package_subtitle',
+          'type' => 'text',
+          'default' => ''
+        ),
+        array(
             'label' => 'Package Description:',
             'desc' => '',
             'id' => 'tds_package_description',

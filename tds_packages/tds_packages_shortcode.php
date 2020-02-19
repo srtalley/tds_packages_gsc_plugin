@@ -19,14 +19,18 @@ class TDS_Packages_Shortcode {
     $tdsAttributes = array_change_key_case((array)$tdsAttributes, CASE_LOWER);
     //override any default attributes with the user defined parameters
     $tdsCustomAttributes = shortcode_atts([
-      'class'          => 'all',
-      'destination'    => 'all',
-      'duration'       => 'all',
-      'location'       => 'all',
-      'type'           => 'all',
-      'style'          => 'side',
-      'desc'           => 'yes',
-      'cols'           => 'two',
+      'class'                 => 'all',
+      'destination'           => 'all',
+      'destination_exclude'   => 'none',
+      'duration'              => 'all',
+      'duration_exclude'       => 'none',
+      'location'              => 'all',
+      'location_exclude'       => 'none',
+      'type'                  => 'all',
+      'type_exclude'           => 'none',
+      'style'                 => 'side',
+      'desc'                  => 'yes',
+      'cols'                  => 'two',
     ], $tdsAttributes, $tdsTag);
 
     $tds_meta_query_combined = array();
@@ -52,6 +56,16 @@ class TDS_Packages_Shortcode {
       );
     } //end if($tdsCustomAttributes['destination'] != 'all')
 
+    if($tdsCustomAttributes['destination_exclude'] != 'none') {
+      //we have to "explode" the string into an array if there are multiple items
+      $tds_taxonomy_query_combined[] = array(
+        'taxonomy' => 'tds-packages-destination',
+        'field' => 'slug',
+        'terms' => explode(',', $tdsCustomAttributes['destination_exclude']),
+        'operator' => 'NOT IN'
+      );
+    } //end if($tdsCustomAttributes['destination_exclude'] != 'all')
+
     if($tdsCustomAttributes['duration'] != 'all') {
       //we have to "explode" the string into an array if there are multiple items
       $tds_taxonomy_query_combined[] = array(
@@ -60,6 +74,16 @@ class TDS_Packages_Shortcode {
         'terms' => explode(',', $tdsCustomAttributes['duration']),
       );
     } //end if($tdsCustomAttributes['duration'] != 'all')
+
+    if($tdsCustomAttributes['duration_exclude'] != 'none') {
+      //we have to "explode" the string into an array if there are multiple items
+      $tds_taxonomy_query_combined[] = array(
+        'taxonomy' => 'tds-packages-duration',
+        'field' => 'slug',
+        'terms' => explode(',', $tdsCustomAttributes['duration_exclude']),
+        'operator' => 'NOT IN'
+      );
+    } //end if($tdsCustomAttributes['duration_exclude'] != 'all')
 
     if($tdsCustomAttributes['location'] != 'all') {
       //we have to "explode" the string into an array if there are multiple items
@@ -70,6 +94,16 @@ class TDS_Packages_Shortcode {
       );
     } //end if($tdsCustomAttributes['location'] != 'all')
 
+    if($tdsCustomAttributes['location_exclude'] != 'none') {
+      //we have to "explode" the string into an array if there are multiple items
+      $tds_taxonomy_query_combined[] = array(
+        'taxonomy' => 'tds-packages-location',
+        'field' => 'slug',
+        'terms' => explode(',', $tdsCustomAttributes['location_exclude']),
+        'operator' => 'NOT IN'
+      );
+    } //end if($tdsCustomAttributes['location_exclude'] != 'all')
+
     if($tdsCustomAttributes['type'] != 'all') {
       //we have to "explode" the string into an array if there are multiple items
       $tds_taxonomy_query_combined[] = array(
@@ -78,6 +112,17 @@ class TDS_Packages_Shortcode {
         'terms' => explode(',', $tdsCustomAttributes['type']),
       );
     } //end if($tdsCustomAttributes['type'] != 'all')
+
+    if($tdsCustomAttributes['type_exclude'] != 'none') {
+      //we have to "explode" the string into an array if there are multiple items
+      $tds_taxonomy_query_combined[] = array(
+        'taxonomy' => 'tds-packages-type',
+        'field' => 'slug',
+        'terms' => explode(',', $tdsCustomAttributes['type_exclude']),
+        'operator' => 'NOT IN'
+      );
+    } //end if($tdsCustomAttributes['type_exclude'] != 'all')
+
 
     global $paged;
 
@@ -260,9 +305,24 @@ class TDS_Packages_Shortcode {
          //Set the header color
         $tds_package_color= '';
         //Set the header title
-        $tds_header_line = $tds_package_title;
+        $tds_header_line = '';
+
+        //Get the title prefix 
+        $tds_package_title_prefix = get_post_meta($tds_post_id, 'tds_package_title_prefix', true);
+                
         //Initialize the subheader line
         $tds_sub_header_line = '';
+
+        //Get the package subtitle
+        $tds_package_subtitle = get_post_meta($tds_post_id, 'tds_package_subtitle', true);
+
+        if($tds_package_subtitle == '') {
+          $tds_header_line = $tds_package_title;
+        } else {
+          $tds_header_line = $tds_package_subtitle;
+        }
+
+
         //BUILD THE HEADER LINE DEPENDING UPON THE STYLE
         if($tdsCustomAttributes['style'] == 'top') {
             $tds_click_to_view_text = $tds_package_title;
@@ -279,10 +339,19 @@ class TDS_Packages_Shortcode {
         } elseif($tds_package_post_type == 'Activity') {
           $tds_package_color = get_option('tds_packages_activity_color_option');
           $tds_click_to_view_text = 'Read More About ' . $tds_package_title;        } elseif($tds_package_post_type == 'Tour') {
-          $tds_header_line = $tds_destinations . ': ' . $tds_durations .' from $' . $tds_package_price;
-          $tds_sub_header_line = '<h5>' . $tds_package_title . '</h5>';
-          $tds_click_to_view_text = 'View Detailed Itinerary';
-          $tds_package_color = get_option('tds_packages_tour_color_option');
+
+            if($tds_package_title_prefix != '') {
+              $tds_destinations = $tds_package_title_prefix;
+            }
+            $tds_header_line = $tds_destinations . ': ' . $tds_durations .' from $' . $tds_package_price;
+
+            if($tds_package_subtitle != '') {
+              $tds_sub_header_line = '<h5>' . $tds_package_subtitle . '</h5>';
+            } else {
+              $tds_sub_header_line = '<h5>' . $tds_package_title . '</h5>';
+            }
+            $tds_click_to_view_text = 'View Detailed Itinerary';
+            $tds_package_color = get_option('tds_packages_tour_color_option');
 
         } elseif($tds_package_post_type == 'Location') {
           $tds_package_color = get_option('tds_packages_location_color_option');

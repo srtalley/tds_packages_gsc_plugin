@@ -3,8 +3,8 @@
 Plugin Name: Build Custom Packages for Tours and Activities
 Plugin URI: http://dustysun.com
 Description: Allows adding custom packages that can be shown on pages using a simple shortcode
-Version: 2.0
-Date: 2020-02-17
+Version: 2.0.1
+Date: 2020-02-19
 Author: Dusty Sun
 Author URI: http://dustysun.com
 License: GPLv2
